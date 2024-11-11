@@ -1,8 +1,11 @@
+// Selecting Elements
 const usernameField = document.querySelector("#usernameField");
 const feedbackArea = document.querySelector(".invalid_feedback");
 const emailField = document.querySelector("#emailField");
-const EmailfeedbackArea = document.querySelector(".EmailfeedbackArea");
+const emailFeedbackArea = document.querySelector(".EmailfeedbackArea");
 const usernameSuccessOutput = document.querySelector(".usernameSuccessOutput");
+const showPasswordToggle = document.querySelector(".showPasswordToggle");
+const passwordInput = document.querySelector("#passwordField");
 
 // Debounce function to reduce validation calls
 function debounce(func, delay = 300) {
@@ -13,59 +16,84 @@ function debounce(func, delay = 300) {
   };
 }
 
+// Toggle password visibility
+function togglePasswordVisibility() {
+  const isPasswordVisible = passwordInput.type === "password";
+  passwordInput.type = isPasswordVisible ? "text" : "password";
+  showPasswordToggle.textContent = isPasswordVisible ? "Hide" : "Show";
+}
+
+showPasswordToggle.addEventListener("click", togglePasswordVisibility);
+
 // Validate username
-usernameField.addEventListener("input", debounce((e) => {
-  const usernameVal = e.target.value.trim();
+async function validateUsername() {
+  const usernameVal = usernameField.value.trim();
   usernameSuccessOutput.style.display = 'block';
   usernameSuccessOutput.textContent = `Checking ${usernameVal}`;
   feedbackArea.style.display = 'none';
+  usernameField.setAttribute("aria-busy", "true");
 
-  fetch("/authentication/validate-username", {
-    body: JSON.stringify({ username: usernameVal }),
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      usernameSuccessOutput.style.display = 'none';
-      if (data.error) {
-        usernameField.classList.add('is-invalid');
-        feedbackArea.style.display = 'block';
-        feedbackArea.innerText = `${data.error}`;
-      } else {
-        usernameField.classList.remove("is-invalid");
-        feedbackArea.style.display = "none";
-      }
-    })
-    .catch(() => {
-      feedbackArea.style.display = 'block';
-      feedbackArea.innerText = 'An error occurred. Please try again.';
+  try {
+    const res = await fetch("/authentication/validate-username", {
+      body: JSON.stringify({ username: usernameVal }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
-}));
+
+    const data = await res.json();
+    usernameSuccessOutput.style.display = 'none';
+    usernameField.setAttribute("aria-busy", "false");
+
+    if (data.error) {
+      usernameField.classList.add('is-invalid');
+      feedbackArea.style.display = 'block';
+      feedbackArea.innerText = data.error;
+      feedbackArea.setAttribute("role", "alert");
+    } else {
+      usernameField.classList.remove("is-invalid");
+      feedbackArea.style.display = "none";
+    }
+  } catch (error) {
+    feedbackArea.style.display = 'block';
+    feedbackArea.innerText = 'An error occurred. Please try again.';
+    feedbackArea.setAttribute("role", "alert");
+    usernameField.setAttribute("aria-busy", "false");
+  }
+}
 
 // Validate email
-emailField.addEventListener("input", debounce((e) => {
-  const emailVal = e.target.value.trim();
-  EmailfeedbackArea.style.display = 'none';
+async function validateEmail() {
+  const emailVal = emailField.value.trim();
+  emailFeedbackArea.style.display = 'none';
+  emailField.setAttribute("aria-busy", "true");
 
-  fetch("/authentication/validate-email", {
-    body: JSON.stringify({ email: emailVal }),
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.error) {
-        emailField.classList.add('is-invalid');
-        EmailfeedbackArea.style.display = 'block';
-        EmailfeedbackArea.innerText = `${data.error}`;
-      } else {
-        emailField.classList.remove("is-invalid");
-        EmailfeedbackArea.style.display = "none";
-      }
-    })
-    .catch(() => {
-      EmailfeedbackArea.style.display = 'block';
-      EmailfeedbackArea.innerText = 'An error occurred. Please try again.';
+  try {
+    const res = await fetch("/authentication/validate-email", {
+      body: JSON.stringify({ email: emailVal }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
     });
-}));
+
+    const data = await res.json();
+    emailField.setAttribute("aria-busy", "false");
+
+    if (data.error) {
+      emailField.classList.add('is-invalid');
+      emailFeedbackArea.style.display = 'block';
+      emailFeedbackArea.innerText = data.error;
+      emailFeedbackArea.setAttribute("role", "alert");
+    } else {
+      emailField.classList.remove("is-invalid");
+      emailFeedbackArea.style.display = "none";
+    }
+  } catch (error) {
+    emailFeedbackArea.style.display = 'block';
+    emailFeedbackArea.innerText = 'An error occurred. Please try again.';
+    emailFeedbackArea.setAttribute("role", "alert");
+    emailField.setAttribute("aria-busy", "false");
+  }
+}
+
+// Event Listeners with Debounce
+usernameField.addEventListener("input", debounce(validateUsername));
+emailField.addEventListener("input", debounce(validateEmail));
