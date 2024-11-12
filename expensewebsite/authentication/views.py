@@ -5,9 +5,17 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import json
+from django.contrib import messages
 
 class RegisterationView(View):
     def get(self, request):
+        return render(request, 'authentication/register.html')
+    
+    def post(self, request):
+        messages.success(request,'Successfully registered')
+        messages.warning(request,'warning message')
+        messages.info(request,'info message')
+        messages.error(request,'error message')
         return render(request, 'authentication/register.html')
 
 
