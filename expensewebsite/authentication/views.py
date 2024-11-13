@@ -7,17 +7,32 @@ from django.core.validators import validate_email
 import json
 from django.contrib import messages
 
+
 class RegisterationView(View):
     def get(self, request):
         return render(request, 'authentication/register.html')
-    
     def post(self, request):
-        messages.success(request,'Successfully registered')
-        messages.warning(request,'warning message')
-        messages.info(request,'info message')
-        messages.error(request,'error message')
-        return render(request, 'authentication/register.html')
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
 
+        context = {
+            'fieldValues': request.POST
+        }
+
+        if not User.objects.filter(username=username).exists():
+            if not User.objects.filter(email=email).exists():
+                if len(password) < 6:
+                    messages.error(request, 'Password too short')
+                    return render(request, 'authentication/register.html', context)
+
+                user = User.objects.create_user(username=username, email=email)
+                user.set_password(password)
+                # user.is_active = False
+                user.save()
+        # Success message
+        messages.success(request, 'Successfully registered')
+        return render(request, 'authentication/register.html')
 
 class UsernameValidationView(View):
     def post(self, request):

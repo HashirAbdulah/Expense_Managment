@@ -6,7 +6,7 @@ const emailFeedbackArea = document.querySelector(".EmailfeedbackArea");
 const usernameSuccessOutput = document.querySelector(".usernameSuccessOutput");
 const showPasswordToggle = document.querySelector(".showPasswordToggle");
 const passwordInput = document.querySelector("#passwordField");
-
+const submit_btn = document.querySelector('.submit-btn')
 // Debounce function to reduce validation calls
 function debounce(func, delay = 300) {
   let timer;
@@ -49,9 +49,11 @@ async function validateUsername() {
       feedbackArea.style.display = 'block';
       feedbackArea.innerText = data.error;
       feedbackArea.setAttribute("role", "alert");
+      submit_btn.disabled = true;
     } else {
       usernameField.classList.remove("is-invalid");
       feedbackArea.style.display = "none";
+      submit_btn.removeAttribute("disabled");
     }
   } catch (error) {
     feedbackArea.style.display = 'block';
@@ -78,11 +80,13 @@ async function validateEmail() {
     emailField.setAttribute("aria-busy", "false");
 
     if (data.error) {
+      submit_btn.disabled = true;
       emailField.classList.add('is-invalid');
       emailFeedbackArea.style.display = 'block';
       emailFeedbackArea.innerText = data.error;
       emailFeedbackArea.setAttribute("role", "alert");
     } else {
+      submit_btn.removeAttribute('disabled');
       emailField.classList.remove("is-invalid");
       emailFeedbackArea.style.display = "none";
     }
