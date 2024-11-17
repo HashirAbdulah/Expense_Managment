@@ -78,13 +78,13 @@ body {
       {% include 'partials/_messages.html' %}
       <div class="card-body">
         <div class="form-group mb-3">
-          <input type="text" name="username" id="usernameField" placeholder="Username" class="form-control" required>
+          <input type="text" name="username" id="usernameField" placeholder="Username" class="form-control" required value="{{fieldValues.username}}">
           <div class="invalid-feedback invalid_feedback" style="display: none;"></div>
           <p class="text-sm text-success usernameSuccessOutput"></p>
         </div>
 
         <div class="form-group mb-3">
-          <input type="email" name="email" id="emailField" placeholder="Email" class="form-control" required>
+          <input type="email" name="email" id="emailField" placeholder="Email" class="form-control" required value="{{fieldValues.email}}">
           <div class="invalid-feedback EmailfeedbackArea" style="display: none;"></div>
         </div>
 

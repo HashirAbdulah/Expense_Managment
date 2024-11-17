@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import json
 from django.contrib import messages
+from django.core.mail import send_mail
 
 
 class RegisterationView(View):
@@ -28,8 +29,20 @@ class RegisterationView(View):
 
                 user = User.objects.create_user(username=username, email=email)
                 user.set_password(password)
-                # user.is_active = False
+                user.is_active = False
                 user.save()
+                email_subject = "Activate Your Account"
+                email_body = (
+                f"To activate your account, click on the following link: "
+                f"http://localhost:8000/activate/{user.pk}"
+                )
+                send_mail(
+                email_subject,
+                email_body,
+                "hecid36230@operades.com",#email that will be use for the reciever
+                [email],
+                fail_silently=False,
+                )
         # Success message
         messages.success(request, 'Successfully registered')
         return render(request, 'authentication/register.html')
