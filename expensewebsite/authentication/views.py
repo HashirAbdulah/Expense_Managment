@@ -1,5 +1,6 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views import View
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -7,6 +8,11 @@ from django.core.validators import validate_email
 import json
 from django.contrib import messages
 from django.core.mail import send_mail
+from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
+from django.utils.http import urlsafe_base64_encode
+from django.contrib.sites.shortcuts import get_current_site
+from .utils import token_genrator
+from django.conf import settings
 
 
 class RegisterationView(View):
@@ -31,15 +37,20 @@ class RegisterationView(View):
                 user.set_password(password)
                 user.is_active = False
                 user.save()
+                uidb64 = urlsafe_base64_encode(force_bytes((user.pk)))
+                domain = get_current_site(request).domain
+                link = reverse('activate', kwargs={'uidb64': uidb64, 'token': token_genrator.make_token(user)})
+                protocol = 'https' if not settings.DEBUG else 'http'
+                active_url = f'{protocol}://{domain}{link}'
                 email_subject = "Activate Your Account"
                 email_body = (
-                f"To activate your account, click on the following link: "
-                f"http://localhost:8000/activate/{user.pk}"
+                f"Hi {username}, To activate your account, click on the following link: "
+                f"{active_url}{user.pk}"
                 )
                 send_mail(
                 email_subject,
                 email_body,
-                "hecid36230@operades.com",#email that will be use for the reciever
+                "cimiko6016@opposir.com",#email that will be use for the reciever
                 [email],
                 fail_silently=False,
                 )
@@ -47,6 +58,10 @@ class RegisterationView(View):
         messages.success(request, 'Successfully registered')
         return render(request, 'authentication/register.html')
 
+class VerificationView(View):
+    def get(self, request, uidb64, token):
+        return redirect('login')
+    
 class UsernameValidationView(View):
     def post(self, request):
         try:
@@ -86,3 +101,4 @@ class EmailValidationView(View):
             return JsonResponse({'email_valid': True}, status=200)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
+
