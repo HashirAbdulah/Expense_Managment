@@ -67,12 +67,26 @@ body {
   min-height: 100vh;
 }
 
+.activation-success-message {
+  font-size: 16px;
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+}
 </style>
 <div class="d-flex justify-content-center align-items-center min-vh-80">
   <div class="card shadow-sm p-4" style="width: 100%; max-width: 400px; border-radius: 8px;">
     <div class="card-header text-center bg-transparent border-0 mb-3">
       <h3 class="mb-0" style="font-weight: bold; color: #333;">Create Your Account</h3>
     </div>
+    
+    {% if activation_success %}
+      <div class="activation-success-message">
+        Your account has been successfully activated. You can now log in.
+      </div>
+    {% endif %}
+
     <form id="registerForm" action="{% url 'register' %}" method="post">
       {% csrf_token %}
       {% include 'partials/_messages.html' %}
@@ -97,10 +111,20 @@ body {
       </div>
     </form>
     <div class="text-center mt-3">
-      <small class="text-muted">Already have an account? <a href="#" class="text-primary">Log in</a></small>
+      <small class="text-muted">Already have an account? <a href="{% url 'login' %}" class="text-primary">Log in</a></small>
     </div>
   </div>
 </div>
 
 <script src="{% static 'js/register.js' %}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const successMessage = document.querySelector(".activation-success-message");
+  if (successMessage) {
+    setTimeout(() => {
+      window.location.href = "{% url 'login' %}";
+    }, 3000); // Redirect after 2 seconds
+  }
+});
+</script>
 {% endblock %}
