@@ -173,3 +173,8 @@ class EmailValidationView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
 
+class LogoutView(View):
+    def post(self, request):
+        auth.logout(request)
+        messages.success(request, 'Successfully Logged Out')
+        return redirect('login')
