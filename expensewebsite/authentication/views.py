@@ -6,14 +6,13 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import json
-from django.contrib import messages
+from django.contrib import messages,auth
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from .utils import token_genrator
 from django.conf import settings
-
 
 class RegisterationView(View):
     def get(self, request):
@@ -59,7 +58,7 @@ class RegisterationView(View):
                 send_mail(
                     email_subject,
                     email_body,
-                    "xameni8509@kazvi.com",#email that will be use for the reciever
+                    "vonibig329@kazvi.com",#email that will be use for the reciever
                     [email],
                     fail_silently=False,
                 )
@@ -71,8 +70,33 @@ class RegisterationView(View):
         return render(request, 'authentication/register.html')
 
 class LoginView(View):
-    # Implement login functionality here
     def get(self, request):
+        # Display the login page
+        return render(request, 'authentication/login.html')
+
+    def post(self, request):
+        # Process login form submission
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        # Validate input
+        if not username or not password:
+            messages.error(request, "Please enter both username and password.")
+            return render(request, 'authentication/login.html')
+
+        # Authenticate user
+        user = auth.authenticate(username=username, password=password)
+        if user:
+            if user.is_active:
+                auth.login(request, user)
+                messages.success(request, f"Welcome, {username}!")
+                return redirect('expenses:index')
+            else:
+                messages.error(request, "Your account is not active. Please check your email.")
+        else:
+            messages.error(request, "Invalid username or password.")
+
+        # If authentication fails, reload login page
         return render(request, 'authentication/login.html')
 
 class VerificationView(View):
@@ -85,7 +109,7 @@ class VerificationView(View):
             # Validate the token
             if not token_genrator.check_token(user, token):
                 messages.error(request, 'Activation link is invalid or has expired.')
-                return redirect('register')
+                return redirect('expenses')
 
             # Check if the user is already active
             if user.is_active:
