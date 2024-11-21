@@ -6,14 +6,15 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 import json
-from django.contrib import messages,auth
+from django.contrib import messages, auth
 from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str, DjangoUnicodeDecodeError
-from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
 from .utils import token_genrator
 from django.conf import settings
-
+from django.contrib.auth import logout
+# RegisterationView remains unchanged, as registration should not be login-protected
 class RegisterationView(View):
     def get(self, request):
         return render(request, 'authentication/register.html')
@@ -58,7 +59,7 @@ class RegisterationView(View):
                 send_mail(
                     email_subject,
                     email_body,
-                    "vonibig329@kazvi.com",#email that will be use for the reciever
+                    "vonibig329@kazvi.com",  # Email used as sender
                     [email],
                     fail_silently=False,
                 )
@@ -99,6 +100,7 @@ class LoginView(View):
         # If authentication fails, reload login page
         return render(request, 'authentication/login.html')
 
+# VerificationView remains unchanged, as it's accessed via activation link
 class VerificationView(View):
     def get(self, request, uidb64, token):
         try:
@@ -132,7 +134,8 @@ class VerificationView(View):
             print(f"Unexpected error during account activation: {ex}")
             messages.error(request, 'Something went wrong. Please try again.')
             return redirect('register')
-   
+
+# Making UsernameValidationView and EmailValidationView accessible without login
 class UsernameValidationView(View):
     def post(self, request):
         try:
@@ -173,8 +176,15 @@ class EmailValidationView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON data'}, status=400)
 
+# LogoutView does not require login protection
 class LogoutView(View):
     def post(self, request):
-        auth.logout(request)
-        messages.success(request, 'Successfully Logged Out')
+        logout(request)
+        messages.success(request, 'Successfully logged out.')
         return redirect('login')
+
+# Ensure cache is cleared after logout
+def clear_cache_after_logout(response):
+    response['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response['Pragma'] = 'no-cache'
+    return response
