@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'expensewebsite',
     'expenses',
     'authentication',
+    'userpreferences',
 ]
 
 MIDDLEWARE = [
