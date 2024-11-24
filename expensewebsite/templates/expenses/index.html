@@ -3,14 +3,12 @@
 <div class="container">
   {% include 'partials/_messages.html' %}
 
-  <h2>Expense List</h2>
-  <ul class="list-group">
-    <li class="list-group-item">Bought Book</li>
-    <li class="list-group-item">A second item</li>
-    <li class="list-group-item">A third item</li>
-    <li class="list-group-item">A fourth item</li>
-    <li class="list-group-item">And a fifth one</li>
-  </ul>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="">Expenses</a></li>
+      <li class="breadcrumb-item active" aria-current="page">My Expenses</li>
+    </ol>
+  </nav>
 </div>
 
 {% endblock content %}

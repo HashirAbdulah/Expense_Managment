@@ -91,7 +91,7 @@ class LoginView(View):
             if user.is_active:
                 auth.login(request, user)
                 messages.success(request, f"Welcome, {username}!")
-                return redirect('expenses:index')
+                return redirect('expenses:expenses')
             else:
                 messages.error(request, "Your account is not active. Please check your email.")
         else:
@@ -111,7 +111,7 @@ class VerificationView(View):
             # Validate the token
             if not token_genrator.check_token(user, token):
                 messages.error(request, 'Activation link is invalid or has expired.')
-                return redirect('expenses')
+                return redirect('expenses:expenses')
 
             # Check if the user is already active
             if user.is_active:
