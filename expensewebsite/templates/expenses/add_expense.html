@@ -1,14 +1,85 @@
-{% extends 'templates/base.html' %}
-
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="{% url 'expenses:expenses' %}">Expenses</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Add Expenses</li>
-    </ol>
-  </nav>
-
+{% extends 'base.html' %}
 {% block content %}
 
 <h1>Add Expense</h1>
+<div class="container mt-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'expenses:expenses' %}">Expenses</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">Add Expense</li>
+    </ol>
+  </nav>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="card-body">
+      <form action="{% url 'expenses:add_expense' %}" method="post">
+        <!-- Include messages for feedback -->
+        {% include 'partials/_messages.html' %}
+        {% csrf_token %}
+
+        <!-- Amount Field -->
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input
+            type="number"
+            class="form-control form-control-sm"
+            name="amount"
+            value="{{ values.amount|default:'' }}"
+            placeholder="Enter the expense amount"
+            required
+          />
+        </div>
+
+        <!-- Description Field -->
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            name="description"
+            value="{{ values.description|default:'' }}"
+            placeholder="Enter a brief description"
+          />
+        </div>
+
+        <!-- Category Field -->
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select
+            class="form-control"
+            name="category"
+            required
+          >
+            <option value="" disabled selected>Select a category</option>
+            {% for category in categories %}
+            <option value="{{ category.name }}" {% if values.category == category.name %}selected{% endif %}>
+              {{ category.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date of Expense -->
+        <div class="form-group">
+          <label for="expense_date">Date of Expense</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            name="expense_date"
+            value="{{ values.expense_date|default:'' }}"
+            required
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Submit" class="btn btn-primary btn-sm" />
+      </form>
+    </div>
+  </div>
+</div>
 
 {% endblock content %}
