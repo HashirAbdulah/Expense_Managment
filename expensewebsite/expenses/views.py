@@ -1,15 +1,18 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render,redirect
 from django.contrib.auth.decorators import login_required
 from authentication.views import clear_cache_after_logout
 from .models import Category,Expense
 from django.contrib import messages
 from django.core.paginator import Paginator
+import json
+from django.contrib.auth.models import User
 # Create your views here.
 @login_required
 def index(request):
     categories = Category.objects.all()
     expenses = Expense.objects.filter(owner = request.user).order_by('-date')
-    paginator = Paginator(expenses,2)
+    paginator = Paginator(expenses,4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     context = {
@@ -91,14 +94,21 @@ def expense_edit(request,id):
 
 @login_required
 def expense_delete(request, id):
-    # Get the expense, or show a 404 error if not found
     expense = get_object_or_404(Expense, pk=id)
-    
-    # Only allow deletion via POST to prevent accidental deletions
     if request.method == 'POST':
         expense.delete()
         messages.success(request, "Expense deleted successfully")
         return redirect('expenses:expenses')
     else:
-        # Handle GET request by asking for confirmation
         return render(request, 'expenses/confirm_delete.html', {'expense': expense})
+    
+def search_expenses(request):
+    if request.method == 'POST':
+        search_str = json.loads(request.body).get('searchText')
+        expenses = Expense.objects.filter(
+            amount__istartswith=search_str, owner=request.user) | Expense.objects.filter(
+            date__istartswith=search_str, owner=request.user) | Expense.objects.filter(
+            description__icontains=search_str, owner=request.user) | Expense.objects.filter(
+            category__icontains=search_str, owner=request.user)
+        data = expenses.values('id', 'amount', 'category', 'description', 'date')
+        return JsonResponse(list(data), safe=False)
