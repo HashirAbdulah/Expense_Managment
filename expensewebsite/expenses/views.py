@@ -3,13 +3,18 @@ from django.contrib.auth.decorators import login_required
 from authentication.views import clear_cache_after_logout
 from .models import Category,Expense
 from django.contrib import messages
+from django.core.paginator import Paginator
 # Create your views here.
 @login_required
 def index(request):
     categories = Category.objects.all()
     expenses = Expense.objects.filter(owner = request.user).order_by('-date')
+    paginator = Paginator(expenses,2)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     context = {
-        'expenses': expenses
+        'expenses': expenses,
+        'page_obj': page_obj,
     }
     response = render(request, "expenses/index.html",context)
     return clear_cache_after_logout(response)
@@ -62,7 +67,7 @@ def expense_edit(request,id):
         if request.method == 'POST':
             amount = request.POST.get('amount')
             description = request.POST.get('description')
-            date = request.POST.get('expense_date')
+            date = request.POST.get('date')
             category = request.POST.get('category')
             if not amount:
                 messages.error(request,'Amount is Required')
@@ -74,7 +79,7 @@ def expense_edit(request,id):
             
             expense.owner = request.user
             expense.amount = amount
-            expense. date = date
+            expense.date = date
             expense.category = category
             expense.description = description
             expense.save()
