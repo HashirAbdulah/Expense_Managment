@@ -6,21 +6,29 @@ from .models import Category,Expense
 from django.contrib import messages
 from django.core.paginator import Paginator
 import json
-from django.contrib.auth.models import User
+from userpreferences.models import UserPreferences
+from datetime import datetime
 # Create your views here.
 @login_required
 def index(request):
     categories = Category.objects.all()
-    expenses = Expense.objects.filter(owner = request.user).order_by('-date')
-    paginator = Paginator(expenses,4)
+    expenses = Expense.objects.filter(owner=request.user).order_by('-date')
+    paginator = Paginator(expenses, 4)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+
+    # Try to get user preferences, or create them if they don't exist
+    user_preferences, created = UserPreferences.objects.get_or_create(user=request.user)
+    currency = user_preferences.currency or 'USD'  # Default to USD if no currency set
+
     context = {
         'expenses': expenses,
         'page_obj': page_obj,
+        'currency': currency,
     }
-    response = render(request, "expenses/index.html",context)
+    response = render(request, "expenses/index.html", context)
     return clear_cache_after_logout(response)
+
 
 @login_required
 def add_expense(request):
@@ -55,42 +63,53 @@ def add_expense(request):
     return clear_cache_after_logout(response)
 
 @login_required
-def expense_edit(request,id):
-    expense = Expense.objects.get(pk= id)
+def expense_edit(request, id):
+    expense = Expense.objects.get(pk=id)
     categories = Category.objects.all()
+    
+    # Store the initial values in context to persist the data on form errors
     context = {
         'expense': expense,
         'values': expense,
         'categories': categories,
     }
+    
     if request.method == 'GET':
-        return render(request, 'expenses/edit_expense.html',context)
+        return render(request, 'expenses/edit_expense.html', context)
     
     elif request.method == 'POST':
-        if request.method == 'POST':
-            amount = request.POST.get('amount')
-            description = request.POST.get('description')
-            date = request.POST.get('date')
-            category = request.POST.get('category')
-            if not amount:
-                messages.error(request,'Amount is Required')
-                response = render(request, 'expenses/edit_expense.html',context)
-
-            if not description:
-                messages.error(request,'Description is Required')
-                response = render(request, 'expenses/edit_expense.html',context)
-            
-            expense.owner = request.user
-            expense.amount = amount
-            expense.date = date
-            expense.category = category
-            expense.description = description
-            expense.save()
-            messages.success(request,"Expense updated successfully")
-            
-            return redirect('expenses:expenses') 
-
-        return clear_cache_after_logout(response)
+        amount = request.POST.get('amount')
+        description = request.POST.get('description')
+        date = request.POST.get('expense_date')  # Ensure the correct key name is used
+        category = request.POST.get('category')
+        
+        if not amount:
+            messages.error(request, 'Amount is Required')
+            return render(request, 'expenses/edit_expense.html', context)
+        
+        if not description:
+            messages.error(request, 'Description is Required')
+            return render(request, 'expenses/edit_expense.html', context)
+        
+        # Check if date is provided and convert it to a date object if needed
+        if date:
+            try:
+                # Convert string date into a datetime.date object
+                date = datetime.strptime(date, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, 'Invalid Date Format')
+                return render(request, 'expenses/edit_expense.html', context)
+        
+        # Update the expense object
+        expense.owner = request.user
+        expense.amount = amount
+        expense.date = date
+        expense.category = category
+        expense.description = description
+        expense.save()
+        
+        messages.success(request, "Expense updated successfully")
+        return redirect('expenses:expenses')
 
 @login_required
 def expense_delete(request, id):

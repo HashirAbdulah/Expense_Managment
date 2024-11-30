@@ -74,13 +74,11 @@
         <div class="form-group">
           <label for="expense_date">Date of Expense</label>
           <input
-            type="date"
-            class="form-control form-control-sm"
-            name="expense_date"
-            value="{{ values.expense_date|default:'' }}"
-            required
-          />
-        </div>
+              type="date"
+              class="form-control form-control-sm"
+              name="expense_date"
+              value="{{ values.date|date:'Y-m-d' }}"/>
+      </div>
 
         <!-- Submit Button -->
         <input type="submit" value="Update" class="btn btn-primary btn-sm" />

@@ -37,7 +37,7 @@ const handleSearch = (searchValue) => {
 
         // Handle no results case
         if (data.length === 0) {
-          tableOutput.innerHTML = "<p class='text-center'>No results found</p>";
+          tableOutput.innerHTML = "<tr><td colspan='5' class='text-center'>No results found</td></tr>";
         } else {
           // Populate the table with search results
           tableBody.innerHTML = data
@@ -58,7 +58,7 @@ const handleSearch = (searchValue) => {
       })
       .catch((err) => {
         console.error("Error fetching search results:", err);
-        tableOutput.innerHTML = `<p class='text-center text-danger'>Error fetching results. Please try again later.</p>`;
+        tableOutput.innerHTML = "<tr><td colspan='5' class='text-center text-danger'>Error fetching results. Please try again later.</td></tr>";
       });
   } else {
     // Reset to default table and pagination view when the search field is empty
