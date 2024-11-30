@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 import json
 from userpreferences.models import UserPreferences
-from datetime import datetime
+from datetime import datetime,date
 # Create your views here.
 @login_required
 def index(request):
@@ -35,30 +35,55 @@ def add_expense(request):
     categories = Category.objects.all()
     context = {
         'categories': categories,
-        'values':request.POST
+        'values': request.POST  # Pass the POST data to preserve user input
     }
-    response = render(request, 'expenses/add_expense.html',context)
+    response = render(request, 'expenses/add_expense.html', context)
 
     if request.method == 'GET':
         return response
-    
+
     if request.method == 'POST':
         amount = request.POST.get('amount')
         description = request.POST.get('description')
-        date = request.POST.get('expense_date')
+        expense_date = request.POST.get('expense_date')
         category = request.POST.get('category')
-        if not amount:
-            messages.error(request,'Amount is Required')
-            response = render(request, 'expenses/add_expense.html',context)
+
+        if amount:
+            amount = amount.replace(',', '')  # Strip commas before storing
+            try:
+                amount = float(amount)  # Convert the amount to a float
+            except ValueError:
+                messages.error(request, 'Invalid Amount Format')
+                return render(request, 'expenses/add_expense.html', context)
+        else:
+            messages.error(request, 'Amount is required')
+            return render(request, 'expenses/add_expense.html', context)
 
         if not description:
-            messages.error(request,'Description is Required')
-            response = render(request, 'expenses/add_expense.html',context)
+            messages.error(request, 'Description is Required')
+            return render(request, 'expenses/add_expense.html', context)
 
-        Expense.objects.create(owner = request.user, amount = amount, description = description, date = date, category = category)
-        messages.success(request,"Expense created successfully")
-        
-        return redirect('expenses:expenses') 
+        if not expense_date:
+            expense_date = date.today()  # Set the current date if the user didn't provide one
+        else:
+            try:
+                # Convert the date string to a date object
+                expense_date = datetime.strptime(expense_date, '%Y-%m-%d').date()
+            except ValueError:
+                messages.error(request, 'Invalid Date Format')
+                return render(request, 'expenses/add_expense.html', context)
+
+        # Create the expense record
+        Expense.objects.create(
+            owner=request.user,
+            amount=amount,
+            description=description,
+            date=expense_date,  # Use `expense_date` instead of `date`
+            category=category
+        )
+
+        messages.success(request, "Expense created successfully")
+        return redirect('expenses:expenses')  # Redirect to the expenses list page
 
     return clear_cache_after_logout(response)
 

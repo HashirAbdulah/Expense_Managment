@@ -25,12 +25,14 @@
         <div class="form-group">
           <label for="amount">Amount</label>
           <input
-            type="number"
+            type="text"
             class="form-control form-control-sm"
             name="amount"
+            id="amount"
             value="{{ values.amount|default:'' }}"
             placeholder="Enter the expense amount"
             required
+            oninput="formatAmount(this)"
           />
         </div>
 
@@ -43,6 +45,7 @@
             name="description"
             value="{{ values.description|default:'' }}"
             placeholder="Enter a brief description"
+            required
           />
         </div>
 
@@ -70,9 +73,7 @@
             type="date"
             class="form-control form-control-sm"
             name="expense_date"
-            value="{{ values.expense_date|default:'' }}"
-            required
-          />
+            value="{{ values.expense_date|default:'' }}"/>
         </div>
 
         <!-- Submit Button -->
@@ -81,5 +82,19 @@
     </div>
   </div>
 </div>
+
+<script>
+  //function to format amount with commas
+  function formatAmount(input) {
+      let value = input.value.replace(/,/g, '');
+      if (value) {
+          input.value = Number(value).toLocaleString();
+      }
+  }
+  // remove commas before submitting the form
+  function removeCommas(input) {
+      input.value = input.value.replace(/,/g, '');
+  }
+  </script>
 
 {% endblock content %}
