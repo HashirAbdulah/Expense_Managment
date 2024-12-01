@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Add Income</h1>
+<div class="container mt-4">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'income:income' %}">Income</a>
+      </li>
+      <li class="breadcrumb-item active" aria-current="page">Add Income</li>
+    </ol>
+  </nav>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="card-body">
+      <form action="{% url 'income:add_income' %}" method="post">
+        <!-- Include messages for feedback -->
+        {% include 'partials/_messages.html' %}
+        {% csrf_token %}
+
+        <!-- Amount Field -->
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            name="amount"
+            id="amount"
+            value="{{ values.amount|default:'' }}"
+            placeholder="Enter the income amount"
+            required
+            oninput="formatAmount(this)"
+          />
+        </div>
+
+        <!-- Description Field -->
+        <div class="form-group">
+          <label for="description">Description</label>
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            name="description"
+            value="{{ values.description|default:'' }}"
+            placeholder="Enter a brief description"
+            required
+          />
+        </div>
+
+        <!-- Source Field -->
+        <div class="form-group">
+          <label for="source">Source</label>
+          <select class="form-control" name="source" required>
+            <option value="" disabled selected>Select a Source</option>
+            {% for source in source %}
+            <option value="{{ source.name }}" {% if values.source == source.name %}selected{% endif %}>
+              {{ source.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Date of Income -->
+        <div class="form-group">
+          <label for="expense_date">Date of Income</label>
+          <input
+            type="date"
+            class="form-control form-control-sm"
+            name="expense_date"
+            value="{{ values.income_date|default:'' }}"/>
+        </div>
+
+        <!-- Submit Button -->
+        <input type="submit" value="Submit" class="btn btn-primary btn-sm" />
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to format amount with commas
+  function formatAmount(input) {
+      let value = input.value.replace(/,/g, '');
+      if (value) {
+          input.value = Number(value).toLocaleString();
+      }
+  }
+</script>
+
+{% endblock content %}

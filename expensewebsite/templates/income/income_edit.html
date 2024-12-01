@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Edit Expense</h1>
+<h1>Edit Income</h1>
 <div class="container mt-4">
   <!-- Breadcrumb -->
   <div class="row">
@@ -9,21 +9,21 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="{% url 'expenses:expenses' %}">Expenses</a>
+                <a href="{% url 'income:income' %}">Income</a>
               </li>
-              <li class="breadcrumb-item active" aria-current="page">Edit Expense</li>
+              <li class="breadcrumb-item active" aria-current="page">Edit Income</li>
             </ol>
           </nav>
     </div>
     <div class="col-md-2">
-        <a href="{% url 'expenses:expense_delete' expense.id %}" class="btn btn-danger btn-sm">Delete</a>
+        <a href="{% url 'income:income_delete' income.id %}" class="btn btn-danger btn-sm">Delete</a>
     </div>
   </div>
 
   <!-- Form Card -->
   <div class="card">
     <div class="card-body">
-      <form action="{% url 'expenses:expense_edit' expense.id %}" method="post">
+      <form action="{% url 'income:income_edit' income.id %}" method="post">
         <!-- Include messages for feedback -->
         {% include 'partials/_messages.html' %}
         {% csrf_token %}
@@ -36,7 +36,7 @@
             class="form-control form-control-sm"
             name="amount"
             value="{{ values.amount|default:'' }}"
-            placeholder="Enter the expense amount"
+            placeholder="Enter the income amount"
             required
           />
         </div>
@@ -55,28 +55,28 @@
 
         <!-- Category Field -->
         <div class="form-group">
-          <label for="category">Category</label>
+          <label for="source">source</label>
           <select
             class="form-control"
-            name="category"
+            name="source"
             required
           >
-            <option value="" disabled selected>Select a category</option>
-            {% for category in categories %}
-            <option value="{{ category.name }}" {% if values.category == category.name %}selected{% endif %}>
-              {{ category.name }}
+            <option value="" disabled selected>Select a Source</option>
+            {% for source in source %}
+            <option value="{{ source.name }}" {% if values.source == source.name %}selected{% endif %}>
+              {{ source.name }}
             </option>
             {% endfor %}
           </select>
         </div>
 
-        <!-- Date of Expense -->
+        <!-- Date of Income -->
         <div class="form-group">
-          <label for="expense_date">Date of Expense</label>
+          <label for="income_date">Date of Income</label>
           <input
               type="date"
               class="form-control form-control-sm"
-              name="expense_date"
+              name="income_date"
               value="{{ values.date|date:'Y-m-d' }}"/>
       </div>
 
