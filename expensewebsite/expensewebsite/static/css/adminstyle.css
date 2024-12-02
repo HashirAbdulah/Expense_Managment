@@ -1,0 +1,89 @@
+/* Define CSS variables for consistent theming */
+:root {
+    --primary-bg: rgb(0, 62, 69);
+    --secondary-bg: rgb(61, 88, 106);
+    --text-color: #ffffff;
+    --hover-bg: rgb(0, 80, 85);
+    --transition-speed: 0.3s;
+  }
+  
+  /* Header styling */
+  #header {
+    background: var(--primary-bg);
+    color: var(--text-color);
+  }
+  
+  /* Branding section */
+  #branding h1 {
+    color: var(--text-color);
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Breadcrumbs styling */
+  div.breadcrumbs {
+    background: var(--secondary-bg);
+    color: var(--text-color);
+    padding: 10px;
+    border-radius: 5px;
+  }
+  
+  /* Button styling */
+  input[type="submit"],
+  input[type="button"],
+  .submit-row input {
+    width: 100%;
+    background: var(--primary-bg);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 15px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background var(--transition-speed);
+  }
+  
+  /* Hover effect for buttons */
+  input[type="submit"]:hover,
+  input[type="button"]:hover,
+  .submit-row input:hover {
+    background: var(--hover-bg);
+  }
+  
+  /* Module headings */
+  .module h2,
+  .module caption,
+  .inline-group h2 {
+    background: var(--primary-bg);
+    color: var(--text-color);
+    padding: 5px;
+    border-radius: 3px;
+  }
+  
+  /* Form styling */
+  .login .submit-row {
+    padding: 0 !important;
+  }
+  
+  /* Ensure responsiveness */
+  @media (max-width: 768px) {
+    #branding h1 {
+      font-size: 1.2rem;
+    }
+  
+    input[type="submit"],
+    input[type="button"],
+    .submit-row input {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+  
+    .breadcrumbs {
+      font-size: 0.9rem;
+    }
+  }
+  
