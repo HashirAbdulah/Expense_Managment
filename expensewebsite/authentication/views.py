@@ -11,16 +11,26 @@ from django.core.mail import send_mail
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.contrib.sites.shortcuts import get_current_site
-from .utils import token_genrator
+from .utils import token_generator
 from django.conf import settings
 from django.contrib.auth import logout,get_user_model
-from django.template.loader import render_to_string
+import threading
 from django.conf import settings
 from django.utils.timezone import now
 from django.core.cache import cache
 
 
-# RegisterationView remains unchanged, as registration should not be login-protected
+class EmailThread(threading.Thread):
+    def __init__(self, subject, message, from_email, recipient_list):
+        self.subject = subject
+        self.message = message
+        self.from_email = from_email
+        self.recipient_list = recipient_list
+        super().__init__()
+
+    def run(self):
+        send_mail(self.subject, self.message, self.from_email, self.recipient_list)
+
 class RegisterationView(View):
     def get(self, request):
         return render(request, 'authentication/register.html')
@@ -49,7 +59,7 @@ class RegisterationView(View):
                 # Generate activation URL
                 uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
                 domain = get_current_site(request).domain
-                link = reverse('activate', kwargs={'uidb64': uidb64, 'token': token_genrator.make_token(user)})
+                link = reverse('activate', kwargs={'uidb64': uidb64, 'token': token_generator.make_token(user)})
                 protocol = 'https' if not settings.DEBUG else 'http'
                 activation_url = f'{protocol}://{domain}{link}'
 
@@ -62,13 +72,12 @@ class RegisterationView(View):
                 )
 
                 # Send email
-                send_mail(
-                    email_subject,
-                    email_body,
-                    "filelip663@kindomd.com",  # Email used as sender
-                    [email],
-                    fail_silently=False,
-                )
+                EmailThread(
+                    email_subject, 
+                    email_body, 
+                    settings.EMAIL_HOST_USER, 
+                    [user.email]
+                ).start()
                 # Success message
                 messages.success(request, 'Successfully registered. Check your email to activate your account.')
                 return redirect('register')
@@ -115,7 +124,7 @@ class VerificationView(View):
             user = User.objects.get(pk=id)
 
             # Validate the token
-            if not token_genrator.check_token(user, token):
+            if not token_generator.check_token(user, token):
                 messages.error(request, 'Activation link is invalid or has expired.')
                 return redirect('expenses:expenses')
 
@@ -224,7 +233,7 @@ class RequestPasswordResetEmail(View):
         # Generate reset token
         if user:
             uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-            token = token_genrator.make_token(user)
+            token = token_generator.make_token(user)
 
             # Generate password reset URL
             domain = get_current_site(request).domain
@@ -244,13 +253,12 @@ class RequestPasswordResetEmail(View):
             """
 
             # Send the email
-            send_mail(
-                email_subject,
-                email_body,  # Directly passing the string body
-                settings.DEFAULT_FROM_EMAIL,  # From email
-                [email],  # To email
-                fail_silently=False,
-            )
+            EmailThread(
+            email_subject, 
+            email_body, 
+            settings.EMAIL_HOST_USER, 
+            [user.email]
+            ).start()
 
             # Store timestamp for rate-limiting
             cache.set(f'password_reset_{email}', now(), timeout=3600)  # 1 hour timeout
@@ -269,7 +277,7 @@ class PasswordResetConfirmView(View):
             raise Http404("Invalid link")
 
         # Check if the token is valid
-        if not token_genrator.check_token(user, token):
+        if not token_generator.check_token(user, token):
             messages.error(request, 'Invalid or expired token.')
             return redirect('reset-password')
 
@@ -285,7 +293,7 @@ class PasswordResetConfirmView(View):
             raise Http404("Invalid link")
 
         # Check if the token is valid
-        if not token_genrator.check_token(user, token):
+        if not token_generator.check_token(user, token):
             messages.error(request, 'Invalid or expired token.')
             return redirect('reset-password')
 
