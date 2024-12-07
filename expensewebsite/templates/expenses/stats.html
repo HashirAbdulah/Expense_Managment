@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+  /* Chart container */
+.chart-container {
+  width: 100%;
+  max-width: 600px;  /* Adjust max width as needed */
+  margin: 0 auto;    /* Center the chart */
+}
+
+canvas {
+  width: 100% !important;  /* Make canvas responsive */
+  height: auto !important; /* Maintain aspect ratio */
+}
+
+</style>
+<div class="container mt-4">
+  <!-- Breadcrumb Navigation -->
+  <div class="row">
+    <div class="col-md-10">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item"><a href="{% url 'expenses:expenses' %}">Expenses</a></li>
+          <li class="breadcrumb-item active" aria-current="page">Expenses Summary</li>
+        </ol>
+      </nav>
+    </div>
+    <div class="col-md-2">
+      <a href="{% url 'expenses:expenses' %}" class="btn btn-primary">BACK</a>
+    </div>
+  </div>
+
+  <!-- Chart Display -->
+  <div class="chart-container mt-2">
+    <canvas id="myChart"></canvas>
+  </div> 
+</div>
+
+<!-- External JavaScript -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/stats.js' %}"></script>
+
+{% endblock content %}

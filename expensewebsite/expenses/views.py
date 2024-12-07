@@ -7,7 +7,8 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 import json
 from userpreferences.models import UserPreferences
-from datetime import datetime,date
+from django.db.models import Sum
+from datetime import datetime, date, timedelta
 # Create your views here.
 @login_required
 def index(request):
@@ -105,7 +106,7 @@ def expense_edit(request, id):
     elif request.method == 'POST':
         amount = request.POST.get('amount')
         description = request.POST.get('description')
-        date = request.POST.get('expense_date')  # Ensure the correct key name is used
+        expense_date = request.POST.get('expense_date')  # Ensure the correct key name is used
         category = request.POST.get('category')
         
         if not amount:
@@ -117,10 +118,10 @@ def expense_edit(request, id):
             return render(request, 'expenses/edit_expense.html', context)
         
         # Check if date is provided and convert it to a date object if needed
-        if date:
+        if expense_date:
             try:
                 # Convert string date into a datetime.date object
-                date = datetime.strptime(date, '%Y-%m-%d').date()
+                expense_date = datetime.strptime(expense_date, '%Y-%m-%d').date()
             except ValueError:
                 messages.error(request, 'Invalid Date Format')
                 return render(request, 'expenses/edit_expense.html', context)
@@ -128,7 +129,7 @@ def expense_edit(request, id):
         # Update the expense object
         expense.owner = request.user
         expense.amount = amount
-        expense.date = date
+        expense.date = expense_date
         expense.category = category
         expense.description = description
         expense.save()
@@ -146,6 +147,7 @@ def expense_delete(request, id):
     else:
         return render(request, 'expenses/confirm_delete.html', {'expense': expense})
     
+@login_required
 def search_expenses(request):
     if request.method == 'POST':
         search_str = json.loads(request.body).get('searchText')
@@ -156,3 +158,30 @@ def search_expenses(request):
             category__icontains=search_str, owner=request.user)
         data = expenses.values('id', 'amount', 'category', 'description', 'date')
         return JsonResponse(list(data), safe=False)
+
+@login_required
+def expense_category_summary(request):
+    today_date = date.today()  # Use `date` directly
+    six_months_ago = today_date - timedelta(days=30 * 6)
+
+    # Fetch expenses for the last 6 months
+    expenses = Expense.objects.filter(
+        owner=request.user, date__gte=six_months_ago, date__lte=today_date
+    )
+
+    # Aggregate total amount by category
+    final_rep = (
+        expenses.values('category')  # Group by category
+        .annotate(total_amount=Sum('amount'))  # Calculate total amount for each category
+        .order_by('category')  # Optional: Sort by category
+    )
+
+    # Transform the data into a dictionary
+    category_data = {item['category']: item['total_amount'] for item in final_rep}
+
+    return JsonResponse({'expense_category_data': category_data}, safe=False)
+
+
+@login_required
+def stats_view(request):
+    return render(request, 'expenses/stats.html')
