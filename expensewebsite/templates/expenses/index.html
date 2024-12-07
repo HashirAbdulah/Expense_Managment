@@ -23,6 +23,18 @@
   <!-- Messages -->
   <div class="container">
     {% include 'partials/_messages.html' %} {% if expenses.count %}
+    <!-- Export Buttons with Icons -->
+    <div class="d-flex justify-content-start">
+      <a href="{% url 'expenses:export_pdf' %}" class="btn btn-outline-primary mt-2 mr-3">
+        <i class="fas fa-file-pdf"></i> Export PDF
+      </a>
+      <a href="{% url 'expenses:export_excel' %}" class="btn btn-outline-primary mt-2 mr-3">
+        <i class="fas fa-file-excel"></i> Export Excel
+      </a>
+      <a href="{% url 'expenses:export_csv' %}" class="btn btn-outline-primary mt-2">
+        <i class="fas fa-file-csv"></i> Export CSV
+      </a>
+    </div>
     <!-- Search Bar -->
     <div class="row mb-3">
       <div class="col-md-8"></div>

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404, render,redirect
 from django.contrib.auth.decorators import login_required
 from authentication.views import clear_cache_after_logout
@@ -9,6 +9,11 @@ import json
 from userpreferences.models import UserPreferences
 from django.db.models import Sum
 from datetime import datetime, date, timedelta
+import csv
+from openpyxl import Workbook
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+import tempfile
 # Create your views here.
 @login_required
 def index(request):
@@ -160,8 +165,70 @@ def search_expenses(request):
         return JsonResponse(list(data), safe=False)
 
 @login_required
+def export_csv(request):
+    response = HttpResponse(content_type= 'text/csv')
+    response['Content-Disposition'] = 'attachment; filename="Expense'+ str(datetime.now())+ ".csv"
+    writer = csv.writer(response)
+    writer.writerow(['Amount', 'Category', 'Description', 'Date'])
+    expenses = Expense.objects.filter(owner = request.user)
+    for expense in expenses:
+        writer.writerow([expense.amount, expense.category, expense.description, expense.date])
+    return response
+
+def export_excel(request):
+    # Create an HTTP response with the correct content type for .xlsx files
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Expense' + str(datetime.now()) + ".xlsx"
+    
+    # Create a new workbook and add a sheet
+    wb = Workbook()
+    sheet = wb.active
+    sheet.title = 'Expenses'
+    
+    # Write the header
+    sheet.append(['Amount', 'Category', 'Description', 'Date'])
+    
+    # Write the expense data
+    expenses = Expense.objects.filter(owner=request.user)
+    for expense in expenses:
+        sheet.append([expense.amount, expense.category, expense.description, expense.date])
+    
+    # Save the workbook to the HTTP response
+    wb.save(response)
+    return response
+
+from django.templatetags.static import static
+
+@login_required
+def export_pdf(request):
+    # Fetch the expenses for the current user
+    expenses = Expense.objects.filter(owner=request.user)
+    total = sum(expense.amount for expense in expenses)
+
+    # Build the full static URL for the image
+    logo_url = request.build_absolute_uri(static('img/admin.png'))
+
+    # Render the HTML string from the template with the correct image URL
+    html_string = render_to_string('expenses/pdf_output.html', {'expenses': expenses, 'total': total, 'logo_url': logo_url})
+
+    # Create the HTTP response with the appropriate content type for PDFs
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="expense_report.pdf"'
+
+    # Convert the HTML to PDF using xhtml2pdf
+    pisa_status = pisa.CreatePDF(html_string, dest=response)
+
+    # If there was an error during PDF creation, return an error message
+    if pisa_status.err:
+        return HttpResponse('Error while generating PDF', status=500)
+
+    # Return the generated PDF response
+    return response
+
+
+@login_required
 def expense_category_summary(request):
-    today_date = date.today()  # Use `date` directly
+    today_date = date.today()
     six_months_ago = today_date - timedelta(days=30 * 6)
 
     # Fetch expenses for the last 6 months
